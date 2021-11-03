@@ -24,4 +24,20 @@ library(kableExtra)
 # Read in data
 hares <- read_csv(here("data", "bonanza_hares.csv"))
 ```
+# Data wrangling: date classification
+```{r}
+# Date classification
+date <- as.Date("1998-11-26") # Classify date
+
+date
+
+class(date) # Check the class
+```
+
+# Count the total number of juvenile hare trappings during each year of the study, and create a finalized data visualization of the counts by year. Include a figure caption below the figure in your report. 
+```{r}
+hare_dates <- hares %>%
+  mutate(date_new = mdy(date)) %>% # Convert class to date
+  mutate(year = year(date_new))
+```
 
