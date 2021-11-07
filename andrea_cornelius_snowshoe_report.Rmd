@@ -45,11 +45,11 @@ class(date) # Check the class
 hare_subset <- hares %>% # Pull from hares data
   mutate(date_new = mdy(date)) %>% # Convert class to date
   mutate(year = year(date_new)) %>% # Add new column for year
-  filter(age == "j") %>%
-  group_by(year) %>%
+  filter(age == "j") %>% # Filter age to juvenile
+  group_by(year) %>% # Group by year
   summarize(count = n(),
             mean = mean(count),
-            median = median(count))
+            median = median(count)) # Summarize count, mean, median
 ```
 
 # Include a figure caption below the figure in your report. 
@@ -63,17 +63,20 @@ ggplot(data = hare_subset, aes(x = year, y = count)) +
   theme_gray() +
    labs(x = "Year",
        y = "Juvenile Snowshoe Hare Trappings", 
-       title = "Juvenile Snowshoe Hare Trappings at Bonanza Creek LTER, 1999-2012 (CORNELIUS)")
+       title = "Juvenile Snowshoe Hares Trapped at Bonanza Creek LTER (CORNELIUS)") + 
+  theme(plot.title = element_text(hjust = 0.5))
 ```
+
+**Figure 1: The snowshoe hare population was largest in 1999, at **
 
 ## Juvenile hare weights
 
 # Data wrangling to count the total number of juvenile hare trappings by grid and sex
 ```{r}
 hare_subset_2 <- hares %>% # Pull from hares data
-  filter(age == "j") %>%
+  filter(age == "j") %>% # Filter age to juvenile
   group_by(grid, sex) %>%
-  summarize(count = n())
+  select(-date, -time, -trap, -l_ear, -r_ear, -hindft, -notes, -b_key, -session_id, -study)
 
 hare_subset_2$grid <- gsub("bonrip", "Bonanza Riparian", hare_subset_2$grid) 
 hare_subset_2$grid <- gsub("bonmat", "Bonanza Mature", hare_subset_2$grid)
@@ -85,17 +88,18 @@ hare_subset_2$sex <- gsub("NA", "Unknown", hare_subset_2$sex)
 
 # Data visualization of the total number of juvenile hare trappings by grid and sex
 ```{r}
-ggplot(data = hare_subset_2, aes(x = sex, y = count, fill = sex)) +
-  geom_bar(stat = "identity") +
+ggplot(data = hare_subset_2, aes(x = sex, y = weight, color = sex)) +
+  geom_point(size = 2) + 
+  scale_color_manual(values = c("pink", "blue", "grey"), 
+                     name = "Penguin species") +
   facet_wrap(~ grid) +
-  scale_fill_manual(values=c("pink", "blue", "grey"),
-                    name = "Sex") +
   labs(x = "Sex",
-       y = "Juvenile Snowshoe Hare Count",
-       title = "Number of Juvenile Snowshoe Hares by Site (CORNELIUS)") +
+       y = "Juvenile Snowshoe Hare Weight (g)",
+       title = "Juvenile Snowshoe Hare Weights by Sex and Site (CORNELIUS)") +
   theme_bw() +
   theme(legend.position = "none",
         plot.title = element_text(hjust = 0.5),
         axis.title.x = element_text(size = 10))
 ```
 
+**Figure 2:**
