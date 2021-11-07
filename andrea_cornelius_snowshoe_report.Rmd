@@ -11,7 +11,7 @@ A 3 - 4 sentence section in which you briefly describe the data, including citat
 
 # Install packages
 ```{r setup, include=FALSE, message = FALSE, warning = FALSE}
-knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, options(digits = 2))
 # Attach packages
 library(here)
 library(janitor)
@@ -47,9 +47,7 @@ hare_subset <- hares %>% # Pull from hares data
   mutate(year = year(date_new)) %>% # Add new column for year
   filter(age == "j") %>% # Filter age to juvenile
   group_by(year) %>% # Group by year
-  summarize(count = n(),
-            mean = mean(count),
-            median = median(count)) # Summarize count, mean, median
+  summarize("count" = n()) # Summarize count
 ```
 
 # Include a figure caption below the figure in your report. 
@@ -58,7 +56,7 @@ hare_subset <- hares %>% # Pull from hares data
 ```{r}
 ggplot(data = hare_subset, aes(x = year, y = count)) +
   geom_bar(stat = "identity", fill="#f68060") +
-  scale_x_continuous(limits=c(1998, 2013), breaks = c(1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012)) +
+  scale_x_continuous(breaks = 1999:2012) +
   scale_y_continuous(limits=c(0, 130), breaks = c(0, 25, 50, 75, 100, 125)) +
   theme_gray() +
    labs(x = "Year",
@@ -67,7 +65,7 @@ ggplot(data = hare_subset, aes(x = year, y = count)) +
   theme(plot.title = element_text(hjust = 0.5))
 ```
 
-**Figure 1: The snowshoe hare population was largest in 1999, at **
+**Figure 1: The snowshoe hare population was largest in 1999, at a member count of 126.  declined with peaks in 2005, 2008, and 2011. Minimum in 2010 with a count of 2, varying between. Not much data taken in 2002 or 2009 (not many visits to traps), hence no counts there**
 
 ## Juvenile hare weights
 
@@ -103,3 +101,37 @@ ggplot(data = hare_subset_2, aes(x = sex, y = weight, color = sex)) +
 ```
 
 **Figure 2:**
+
+```{r}
+weight_summary_1 <- hare_subset_2 %>%
+  group_by(sex, grid) %>%
+  summarize("Mean Weight (g)" = mean(weight),
+            "Median Weight (g)" = median(weight),
+            "Standard Deviation (g)" = sd(weight),
+            "Sample Size" = n()) %>%
+  rename("Sex" = sex, "Grid" = grid)
+
+knitr::kable(head(weight_summary_1),
+  caption = "<b> Table 1: Mean, Median, and Standard Deviations for juvenile snowshoe hares by sex. <b>") %>%
+  kable_styling(full_width = F)
+```
+
+
+##Juvenile weight comparison (male & female snowshoe hares)
+```{r}
+weight_summary_2 <- hare_subset_2 %>%
+  group_by(sex) %>%
+  summarize("Mean Weight (g)" = mean(weight),
+            "Median Weight (g)" = median(weight),
+            "Standard Deviation (g)" = sd(weight),
+            "Sample Size" = n()) %>%
+  rename("Sex" = sex)
+
+# Finalize summary table through Kable
+knitr::kable(head(weight_summary_2),
+  caption = "<b> Table 1: Mean, Median, and Standard Deviations for juvenile snowshoe hares by sex. <b>") %>%
+  kable_styling(full_width = F)
+```
+```{r}
+weight_t <- t.test(x, y, alternative = "two.sided", var.equal = FALSE)
+```
