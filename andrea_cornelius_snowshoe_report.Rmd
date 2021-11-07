@@ -6,11 +6,12 @@ output: html_document
 ---
 *Introduction:* A 4 - 5 sentence "mini-introduction" to what this study is exploring, including basic background information about the subject, site and study (with citations as needed), and a brief overview of what is included in the exploratory report. You should probably do this last so you know what’s contained in the report.
 
-*Data and analyses:* A 3 - 4 sentence section in which you briefly describe the data, including citation & credit as needed, and provide an overview of the main analysis, statistical methods and tools used.
+*Data and analyses:* Kielland, K., F.S. Chapin, R.W. Ruess, and Bonanza Creek LTER. 2017. Snowshoe hare physical data in Bonanza Creek Experimental Forest: 1999-Present ver 22. Environmental Data Initiative. (https://doi.org/10.6073/pasta/03dce4856d79b91557d8e6ce2cbcdc14) (Accessed 2021-11-07).
+A 3 - 4 sentence section in which you briefly describe the data, including citation & credit as needed, and provide an overview of the main analysis, statistical methods and tools used.
 
 # Install packages
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+```{r setup, include=FALSE, message = FALSE, warning = FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
 # Attach packages
 library(here)
 library(janitor)
@@ -53,8 +54,9 @@ hare_subset <- hares %>% # Pull from hares data
 
 # Include a figure caption below the figure in your report. 
 
+# Data visualization of the total number of juvenile hare trappings during each year of the study
 ```{r}
-ggplot(data = hare_subset, aes(x = year, y = juvenile_trappings)) +
+ggplot(data = hare_subset, aes(x = year, y = count)) +
   geom_bar(stat = "identity", fill="#f68060") +
   scale_x_continuous(limits=c(1998, 2013), breaks = c(1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012)) +
   scale_y_continuous(limits=c(0, 130), breaks = c(0, 25, 50, 75, 100, 125)) +
@@ -64,15 +66,36 @@ ggplot(data = hare_subset, aes(x = year, y = juvenile_trappings)) +
        title = "Juvenile Snowshoe Hare Trappings at Bonanza Creek LTER, 1999-2012 (CORNELIUS)")
 ```
 
-## Visualize juvenile hare weights
+## Juvenile hare weights
 
-```{r}
-```
-
-
+# Data wrangling to count the total number of juvenile hare trappings by grid and sex
 ```{r}
 hare_subset_2 <- hares %>% # Pull from hares data
-  filter(age == "j") 
-  
+  filter(age == "j") %>%
+  group_by(grid, sex) %>%
+  summarize(count = n())
+
+hare_subset_2$grid <- gsub("bonrip", "Bonanza Riparian", hare_subset_2$grid) 
+hare_subset_2$grid <- gsub("bonmat", "Bonanza Mature", hare_subset_2$grid)
+hare_subset_2$grid <- gsub("bonbs", "Bonanza Black Spruce", hare_subset_2$grid)
+hare_subset_2$sex <- gsub("m", "Male", hare_subset_2$sex)
+hare_subset_2$sex <- gsub("f", "Female", hare_subset_2$sex)
+hare_subset_2$sex <- gsub("NA", "Unknown", hare_subset_2$sex)
+``` 
+
+# Data visualization of the total number of juvenile hare trappings by grid and sex
+```{r}
+ggplot(data = hare_subset_2, aes(x = sex, y = count, fill = sex)) +
+  geom_bar(stat = "identity") +
+  facet_wrap(~ grid) +
+  scale_fill_manual(values=c("pink", "blue", "grey"),
+                    name = "Sex") +
+  labs(x = "Sex",
+       y = "Juvenile Snowshoe Hare Count",
+       title = "Number of Juvenile Snowshoe Hares by Site (CORNELIUS)") +
+  theme_bw() +
+  theme(legend.position = "none",
+        plot.title = element_text(hjust = 0.5),
+        axis.title.x = element_text(size = 10))
 ```
 
