@@ -34,10 +34,45 @@ date
 class(date) # Check the class
 ```
 
-# Count the total number of juvenile hare trappings during each year of the study, and create a finalized data visualization of the counts by year. Include a figure caption below the figure in your report. 
+# Juvenile hare initial investigation
+
+## Annual juvenile hare trap counts
+ 
+# Data wrangling to Count the total number of juvenile hare trappings during each year of the study
 ```{r}
-hare_dates <- hares %>%
+# Count the total number of juvenile hare trappings during each year of the study
+hare_subset <- hares %>% # Pull from hares data
   mutate(date_new = mdy(date)) %>% # Convert class to date
-  mutate(year = year(date_new))
+  mutate(year = year(date_new)) %>% # Add new column for year
+  filter(age == "j") %>%
+  group_by(year) %>%
+  summarize(count = n(),
+            mean = mean(count),
+            median = median(count))
+```
+
+# Include a figure caption below the figure in your report. 
+
+```{r}
+ggplot(data = hare_subset, aes(x = year, y = juvenile_trappings)) +
+  geom_bar(stat = "identity", fill="#f68060") +
+  scale_x_continuous(limits=c(1998, 2013), breaks = c(1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012)) +
+  scale_y_continuous(limits=c(0, 130), breaks = c(0, 25, 50, 75, 100, 125)) +
+  theme_gray() +
+   labs(x = "Year",
+       y = "Juvenile Snowshoe Hare Trappings", 
+       title = "Juvenile Snowshoe Hare Trappings at Bonanza Creek LTER, 1999-2012 (CORNELIUS)")
+```
+
+## Visualize juvenile hare weights
+
+```{r}
+```
+
+
+```{r}
+hare_subset_2 <- hares %>% # Pull from hares data
+  filter(age == "j") 
+  
 ```
 
