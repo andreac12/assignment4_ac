@@ -39,22 +39,31 @@ class(date) # Check the class
 
 ## Annual juvenile hare trap counts
  
-# Data wrangling to Count the total number of juvenile hare trappings during each year of the study
+# Data wrangling to count the total number of juvenile hare trappings during each year of the study
 ```{r}
 # Count the total number of juvenile hare trappings during each year of the study
-hare_subset <- hares %>% # Pull from hares data
+juvenile_traps <- hares %>% # Pull from hares data
   mutate(date_new = mdy(date)) %>% # Convert class to date
   mutate(year = year(date_new)) %>% # Add new column for year
   filter(age == "j") %>% # Filter age to juvenile
   group_by(year) %>% # Group by year
-  summarize("count" = n()) # Summarize count
+  summarize("count" = n())
+
+juvenile_traps_stats <- juvenile_traps %>%
+  summarize("Mean Count" = mean(count),
+            "Median Count" = median(count),
+            "Standard Deviation Count" = sd(count))
+
+knitr::kable(head(juvenile_traps_stats),
+  caption = "<b> Table 1: Mean, Median, and Standard Deviations for juvenile snowshoe hare traps from 1999-2012. <b>") %>%
+  kable_styling(full_width = F)
 ```
 
 # Include a figure caption below the figure in your report. 
 
 # Data visualization of the total number of juvenile hare trappings during each year of the study
 ```{r}
-ggplot(data = hare_subset, aes(x = year, y = count)) +
+ggplot(data = juvenile_traps, aes(x = year, y = count)) +
   geom_bar(stat = "identity", fill="#f68060") +
   scale_x_continuous(breaks = 1999:2012) +
   scale_y_continuous(limits=c(0, 130), breaks = c(0, 25, 50, 75, 100, 125)) +
@@ -66,6 +75,10 @@ ggplot(data = hare_subset, aes(x = year, y = count)) +
 ```
 
 **Figure 1: The snowshoe hare population was largest in 1999, at a member count of 126.  declined with peaks in 2005, 2008, and 2011. Minimum in 2010 with a count of 2, varying between. Not much data taken in 2002 or 2009 (not many visits to traps), hence no counts there**
+
+```{r}
+
+```
 
 ## Juvenile hare weights
 
@@ -133,5 +146,13 @@ knitr::kable(head(weight_summary_2),
   kable_styling(full_width = F)
 ```
 ```{r}
-weight_t <- t.test(x, y, alternative = "two.sided", var.equal = FALSE)
+female_sample <- hare_subset_2 %>%
+  filter(sex == "female") %>%
+  pull(weight)
+
+male_sample <- hare_subset_2 %>%
+  filter(sex == "male") %>%
+  pull(weight)
+
+weight_t <- t.test(female_sample, male_sample)
 ```
