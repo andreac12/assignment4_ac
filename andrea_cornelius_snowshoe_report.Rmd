@@ -2,7 +2,10 @@
 title: "Task 2: Snowshoe Report (CORNELIUS)"
 author: "Andrea Cornelius"
 date: "11/3/2021"
-output: html_document
+output: 
+  html_document:
+    toc: yes
+    theme: yeti
 ---
 *Introduction:* A 4 - 5 sentence "mini-introduction" to what this study is exploring, including basic background information about the subject, site and study (with citations as needed), and a brief overview of what is included in the exploratory report. You should probably do this last so you know what’s contained in the report.
 
@@ -18,6 +21,7 @@ library(janitor)
 library(tidyverse)
 library(lubridate)
 library(kableExtra)
+library(effsize)
 ```
 
 # Read in the data
@@ -33,6 +37,14 @@ date <- as.Date("1998-11-26") # Classify date
 date
 
 class(date) # Check the class
+```
+
+```{r}
+weight <- as.double() # Classify date
+
+weight
+
+class(weight) # Check the class
 ```
 
 # Juvenile hare initial investigation
@@ -52,7 +64,9 @@ juvenile_traps <- hares %>% # Pull from hares data
 juvenile_traps_stats <- juvenile_traps %>%
   summarize("Mean Count" = mean(count),
             "Median Count" = median(count),
-            "Standard Deviation Count" = sd(count))
+            "Standard Deviation Count" = sd(count),
+            "Minimum Count" = min(count),
+            "Maximum Count" = max(count))
 
 knitr::kable(head(juvenile_traps_stats),
   caption = "<b> Table 1: Mean, Median, and Standard Deviations for juvenile snowshoe hare traps from 1999-2012. <b>") %>%
@@ -74,38 +88,35 @@ ggplot(data = juvenile_traps, aes(x = year, y = count)) +
   theme(plot.title = element_text(hjust = 0.5))
 ```
 
-**Figure 1: The snowshoe hare population was largest in 1999, at a member count of 126.  declined with peaks in 2005, 2008, and 2011. Minimum in 2010 with a count of 2, varying between. Not much data taken in 2002 or 2009 (not many visits to traps), hence no counts there**
-
-```{r}
-
-```
+**Figure 1: The snowshoe hare population was largest in 1999, at a trapping count of 126.  declined with peaks in 2005, 2008, and 2011. Minimum in 2010 with a trapping count of 2, varying between. Not much data taken in 2002 or 2009 (not many visits to traps), hence no counts there**
 
 ## Juvenile hare weights
 
 # Data wrangling to count the total number of juvenile hare trappings by grid and sex
 ```{r}
 hare_subset_2 <- hares %>% # Pull from hares data
-  filter(age == "j") %>% # Filter age to juvenile
+  filter(age == "j", weight!= "NA") %>% # Filter age to juvenile
   group_by(grid, sex) %>%
-  select(-date, -time, -trap, -l_ear, -r_ear, -hindft, -notes, -b_key, -session_id, -study)
-
-hare_subset_2$grid <- gsub("bonrip", "Bonanza Riparian", hare_subset_2$grid) 
-hare_subset_2$grid <- gsub("bonmat", "Bonanza Mature", hare_subset_2$grid)
-hare_subset_2$grid <- gsub("bonbs", "Bonanza Black Spruce", hare_subset_2$grid)
-hare_subset_2$sex <- gsub("m", "Male", hare_subset_2$sex)
-hare_subset_2$sex <- gsub("f", "Female", hare_subset_2$sex)
-hare_subset_2$sex <- gsub("NA", "Unknown", hare_subset_2$sex)
+  select(-date, -time, -trap, -l_ear, -r_ear, -hindft, -notes, -b_key, -session_id, -study) %>%
+  mutate(sex = case_when(
+         sex == "f" ~ "Female",
+         sex == "m" ~ "Male",
+         is.na(sex) == TRUE ~ "Unknown"),
+         grid = case_when(
+         grid == "bonrip" ~ "Bonanza Riparian",
+         grid == "bonmat" ~ "Bonanza Mature",
+         grid == "bonbs" ~ "Bonanza Black Spruce"))
 ``` 
 
 # Data visualization of the total number of juvenile hare trappings by grid and sex
 ```{r}
 ggplot(data = hare_subset_2, aes(x = sex, y = weight, color = sex)) +
-  geom_point(size = 2) + 
+  geom_jitter(size = 2) + 
   scale_color_manual(values = c("pink", "blue", "grey"), 
                      name = "Penguin species") +
   facet_wrap(~ grid) +
   labs(x = "Sex",
-       y = "Juvenile Snowshoe Hare Weight (g)",
+       y = "Weight (g)",
        title = "Juvenile Snowshoe Hare Weights by Sex and Site (CORNELIUS)") +
   theme_bw() +
   theme(legend.position = "none",
@@ -118,9 +129,9 @@ ggplot(data = hare_subset_2, aes(x = sex, y = weight, color = sex)) +
 ```{r}
 weight_summary_1 <- hare_subset_2 %>%
   group_by(sex, grid) %>%
-  summarize("Mean Weight (g)" = mean(weight),
-            "Median Weight (g)" = median(weight),
-            "Standard Deviation (g)" = sd(weight),
+  summarize("Mean Weight (g)" = mean(weight, na.rm = TRUE),
+            "Median Weight (g)" = median(weight, na.rm = TRUE),
+            "Standard Deviation (g)" = sd(weight, na.rm = TRUE),
             "Sample Size" = n()) %>%
   rename("Sex" = sex, "Grid" = grid)
 
@@ -129,12 +140,11 @@ knitr::kable(head(weight_summary_1),
   kable_styling(full_width = F)
 ```
 
-
-##Juvenile weight comparison (male & female snowshoe hares)
+##iii. Juvenile weight comparison (male & female snowshoe hares)
 ```{r}
 weight_summary_2 <- hare_subset_2 %>%
   group_by(sex) %>%
-  summarize("Mean Weight (g)" = mean(weight),
+  summarize("Mean Weight (g)" = mean(weight), 
             "Median Weight (g)" = median(weight),
             "Standard Deviation (g)" = sd(weight),
             "Sample Size" = n()) %>%
@@ -146,13 +156,65 @@ knitr::kable(head(weight_summary_2),
   kable_styling(full_width = F)
 ```
 ```{r}
-female_sample <- hare_subset_2 %>%
-  filter(sex == "female") %>%
+female_weight <- hare_subset_2 %>%
+  filter(sex == "Female") %>%
+  drop_na(weight) %>%
   pull(weight)
 
-male_sample <- hare_subset_2 %>%
-  filter(sex == "male") %>%
+male_weight <- hare_subset_2 %>%
+  filter(sex == "Male") %>%
+  drop_na(weight) %>%
   pull(weight)
 
-weight_t <- t.test(female_sample, male_sample)
+weight_cohen <- (cohen.d(male_weight, female_weight))
+
+weight_t <- t.test(male_weight, female_weight, na.rm = TRUE)
+
+weight_t
+
+weight_cohen
 ```
+
+Reject the null hypothesis because it's possible but very unlikely that they were drawn from populations with the same mean. (t(`r weight_t$parameter` = `r weight_t$statistic`, p , 0.007, $\alpha$ = 0.05). # Double check this
+
+```{r}
+male_female <- hare_subset_2 %>% 
+  filter(sex %in% c("Male", "Female"))
+```
+
+```{r}
+ggplot(data = male_female, aes(x = weight)) +
+  geom_histogram(bins = 15) +
+  facet_wrap(~ sex) +
+  scale_fill_manual(values=c("pink", "blue"),
+                    name = "sex") +
+  labs(x = "Weight (g)",
+       y = "Count",
+       title = "Juvenile Snowshoe Hare Count by Weight (CORNELIUS)") +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+```{r}
+ggplot(data = male_female, aes(sample = weight)) +
+  geom_qq() +
+  facet_wrap(~sex) +
+  labs(x = "Theoretical",
+       y = "Sample",
+       title = "Sex Effect on Weight (g) (CORNELIUS)") +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+## iv. Relationship between juvenile weight & hind foot length.
+```{r}
+weight_length <- hares %>%
+  filter(age == "j") %>%
+  select(hindft, weight)
+  
+ggplot(data = weight_length, aes(x = hindft, y = weight)) +
+  geom_point(color = "red") +
+  labs(x = "Hare Hindfoot Length (mm)",
+       y = "Hare Weight (g)",
+       title = "Snowshoe Hare Hindfoot Length and Weight (CORNELIUS)") +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
