@@ -1,24 +1,24 @@
 ---
-title: Bonanza Creek snowshoe hare counts and sizes - exploratory report (CORNELIUS)
+title: Bonanza creek snowshoe hare counts and sizes - exploratory report (CORNELIUS)
 author: "Andrea Cornelius"
 date: "11/3/2021"
 output: html_document
 
 ---
 ### 1. Overview
-This report provides an exploratory overview of differences in counts and weights for  juvenile snowshoe hares (Lepus americanus) trapped in the Bonanza Creek Experimental Forest, (a U.S. Long Term Ecological Research Network site) in Fairbanks, Alaska, over fourteen years, from 1999 through 2012 (Kielland et al 2017). Hares were caught in several traps within each of four different sample grids, identified through ear tags, and were weighed, measured, aged, and sexed. Specifically, juveniles trapped are counted, and juvenile weights are analyzed by site and sex, and the relationship(s) between weight and hindfoot length is explored.
 
+This report provides an exploratory overview of differences in trapping counts and weights for juvenile snowshoe hares (Lepus americanus) trapped in the Bonanza Creek Experimental Forest, (a U.S. Long Term Ecological Research Network site) in Fairbanks, Alaska, over fourteen years, from 1999 through 2012 (Kielland et al 2017). Hares were caught in several traps within each of four different sample grids, identified through ear tags, and were weighed, measured, aged, and sexed. Specifically, juvenile hares trapped are counted, weights are analyzed by site and sex, and the relationship(s) between weight and hindfoot length is explored.
 
 ### 2. Data and methods
-Snowshoe hare structural size measurements were collected and made available by Dr. Knut Kielland, and colleagues (2017) at the Bonanza Creek Long Term Ecological Research (LTER) network site in Fairbanks, Alaska. The data contain observations for 3197 hare trappings, collected over thirteen years, from 1999-2012. Following exploratory data visualization, weights between male and female juvenile hares, and at different trapping grids, are analyzed by unpaired t-tests using a significance level ($\alpha$) of 0.05 throughout. Differences between groups are described by Cohen's *d* effect size. The relationship between weight and hindfoot length is explored by simple linear regression. All analyses are in R version 5.12.10 using RStudio version 1.4.1717.
 
+Snowshoe hare structural size measurements were collected and made available by Dr. Knut Kielland and colleagues (2017) at the Bonanza Creek Long Term Ecological Research (LTER) network site in Fairbanks, Alaska. The data contain observations for 3197 hare trappings, collected over thirteen years, from 1999-2012. Following exploratory data visualization, weights between male and female juvenile hares, and at different trapping grids, are analyzed by unpaired t-tests using a significance level ($\alpha$) of 0.05 throughout. Differences between groups are described by Cohen's *d* effect size. The relationship between weight and hindfoot length is explored by simple linear regression. All analyses are in R version 5.12.10 using RStudio version 1.4.1717.
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE, options(digits = 2))
 # Attach packages
-library(here)
-library(janitor)
 library(tidyverse)
+library(janitor)
+library(here)
 library(lubridate)
 library(kableExtra)
 library(effsize)
@@ -54,6 +54,7 @@ class(weight) # Check the class
 ### 3. Juvenile hare initial investigation
 
 #### A. Annual juvenile hare trap comparison and descriptive statistics
+
 ```{r}
 # Count the total number of juvenile hare trappings during each year of the study
 juvenile_traps <- hares %>% # Pull from hares data
@@ -61,25 +62,22 @@ juvenile_traps <- hares %>% # Pull from hares data
   mutate(year = year(date_new)) %>% # Add new column for year
   filter(age == "j") %>% # Filter age to juvenile
   group_by(year) %>% # Group by year
-  summarize("count" = n())
+  summarize("count" = n()) # Get counts
 ```
 
-**Table 1.** Descriptive statistics (mean, median, standard deviation, minimum and maximum count) for juvenile hares. Data: Kielland et al. 2017. 
 ```{r, descriptive_stats}
 # Get stats for trapped juveniles
 juvenile_traps_stats <- juvenile_traps %>%
-  summarize("Median Count" = median(count),
-            "Mean Count" = mean(count),
+  summarize("Mean Count" = mean(count),
+            "Median Count" = median(count),
             "Standard Deviation Count" = sd(count),
             "Minimum Count" = min(count),
             "Maximum Count" = max(count))
 
 # Make a finalized Kable table
 j_traps_table <- knitr::kable(head(juvenile_traps_stats),
-  caption = "<b> Table 1: Mean, Median, and Standard Deviations for juvenile snowshoe hare traps from 1999-2012. <b>") %>%
+  caption = "<b> Table 1. Descriptive statistics (mean, median, standard deviation, minimum and maximum count) for juvenile hares trapped at Bonanza Creek LTER from 1999-2012. Data: Kielland et al. 2017. <b>") %>%
   kable_styling(full_width = F)
-
-j_traps_table
 ```
 
 ```{r}
@@ -90,13 +88,16 @@ ggplot(data = juvenile_traps, aes(x = year, y = count)) +
   scale_y_continuous(limits=c(0, 130), breaks = c(0, 25, 50, 75, 100, 125)) +
   theme_pubclean() +
    labs(x = "Year",
-       y = "Juvenile Snowshoe Hare Trappings") + 
-  theme(plot.title = element_text(hjust = 0.5))
+       y = "Juvenile Snowshoe Hare Trappings") +
+  theme(text = element_text(family = "Times New Roman"))
 ```
 
-**Figure 1.** The snowshoe hare population was largest in 1999, at a trapping count of 126.  declined with peaks in 2005, 2008, and 2011. Minimum in 2010 with a trapping count of 2, varying between. Not much data taken in 2002 or 2009 (not many visits to traps), hence no counts there.
+**Figure 1.** Count of juvenile snowshoe hares trapped in the Bonanza Creek LTER from 1999-2012.
+
+The snowshoe hare population was largest in 1999, at a trapping count of 126.  declined with peaks in 2005, 2008, and 2011. Minimum in 2010 with a trapping count of 2, varying between. Not much data taken in 2002 or 2009 (not many visits to traps), hence no counts there.
 
 #### B. Difference in weight betweeen juvenile hares by sex and site
+
 ```{r}
 # Data wrangling to count the total number of juvenile hare trappings by grid and sex
 hare_subset_2 <- hares %>% # Pull from hares data
@@ -133,6 +134,7 @@ ggplot(data = hare_subset_2, aes(x = sex, y = weight, color = sex)) +
 **Figure 2.**
 
 **Table 1.** Mean, Median, and Standard Deviations for juvenile snowshoe hares by sex. 
+
 ```{r}
 # Get stats for juvenile hares by sex and grid
 weight_summary_1 <- hare_subset_2 %>%
@@ -148,11 +150,13 @@ knitr::kable(head(weight_summary_1),
   caption = "<b> Table 2: Mean, Median, and Standard Deviations for juvenile snowshoe hares by sex. <b>") %>%
   kable_styling(full_width = F)
 ```
+
 Distributions of weights for all three grids, male and female, were relatively normal and symmetric, with mean and median values very similar in each, and with no notable outliers (Figure 2).
 
-## iii. Juvenile weight comparison (male & female snowshoe hares)
+#### C. Difference in weight between male and female juvenile snowshoe hares
 
 **Table 3.** Mean, Median, and Standard Deviations for juvenile snowshoe hares by sex.
+
 ```{r}
 # Get stats for juvenile hare weight by sex
 weight_summary_2 <- hare_subset_2 %>%
@@ -232,7 +236,8 @@ ggplot(data = male_female, aes(sample = weight)) +
   theme(plot.title = element_text(hjust = 0.5))
 ```
 
-## iv. Relationship between juvenile weight & hindfoot length
+#### D. Relationship between juvenile weight & hindfoot length
+
 ```{r, r juvenile_model, include = FALSE}
 # Do linear regression
 juvenile_lm <- lm(weight ~ hindft, data = hares)
@@ -294,12 +299,20 @@ ggplot(data = weight_length, aes(x = hindft, y = weight)) +
 
 **Figure 3.** Relationship between hindfoot length (mm) and weight (g) for juvenile snowshoe hares. Linear model summary: $\beta$~1~ = `r round(juvenile_lm_tidy$estimate[2], 2)` g mm^-1^, p < 0.001, R^2^ = `r round(juvenile_lm_glance$r.squared,2)`, Pearson's *r* = `r round(juvenile_cor_tidy$estimate,2)`). Data: Kielland et al. (2017).
 
-# Summary
+## Summary
+
 Exploratory data analysis reveals the following initial findings:
 [insert bullet points]
 
 Next steps (Note: you can add anything here you think would be interesting to follow-up with, that was not included in the instructions):
 [insert bullet points]
 
-# Citation
+## Citations
+
 Kielland, K., F.S. Chapin, R.W. Ruess, and Bonanza Creek LTER. 2017. Snowshoe hare physical data in Bonanza Creek Experimental Forest: 1999-Present ver 22. Environmental Data Initiative. (https://doi.org/10.6073/pasta/03dce4856d79b91557d8e6ce2cbcdc14)
+
+R Core Team (2021). R: A language and environment for statistical computing. R Foundation for
+Statistical Computing, Vienna, Austria. URL https://www.R-project.org/.
+  
+RStudio Team (2021). RStudio: Integrated Development Environment for R. RStudio, PBC, Boston, MA
+URL: (http://www.rstudio.com/)
